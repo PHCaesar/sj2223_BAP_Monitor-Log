@@ -1,29 +1,58 @@
-version: '3'
+version: "3"
 
 services:
-  prometheus:
-    image: prom/prometheus:v2.43.0
-    restart: unless-stopped
+  my-app:
+    build:
+      dockerfile: ./Dockerfile
     ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
-    command: --web.enable-lifecycle --config.file=/etc/prometheus/prometheus.yml
+      - "8080:8080"
     networks:
       - monitoring
-
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+  prometheus:
+    image: prom/prometheus:v2.42.0
+    restart: unless-stopped
+    volumes:
+      - ./DockerConf/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+  node-exporter:
+    image: prom/node-exporter:v1.5.0
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--no-collector'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    networks:
+      - monitoring
   grafana:
-    image: grafana/grafana:9.4.7
+    image: grafana/grafana:9.4.1
     ports:
       - "3000:3000"
+    restart: unless-stopped
     volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - grafana-data:/var/lib/grafana
     networks:
       - monitoring
-
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.0
+    image: elasticsearch:8.7.0
     expose:
       - 9200
       - 9300
@@ -46,18 +75,16 @@ services:
       - elasticsearch-data:/usr/share/elasticsearch/data
     networks:
       - monitoring
-
   kibana:
     image: kibana:8.7.0
     environment:
-      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
       - "5601:5601"
     depends_on:
       - elasticsearch
     networks:
       - monitoring
-
   filebeat:
     image: docker.elastic.co/beats/filebeat:8.7.0
     environment:
@@ -65,7 +92,7 @@ services:
       - setup.kibana.host=kibana:5601
       - output.elasticsearch.hosts=["elasticsearch:9200"]
     volumes:
-      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./DockerConf/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:rw
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
@@ -73,22 +100,12 @@ services:
     networks:
       - monitoring
     user: root
-
-  genericuserapp:
-    build:
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    networks:
-      - monitoring
-    labels:
-      collect_logs_with_filebeat: "true"
-      decode_log_event_to_json_object: "true"
+    command: ["sh", "-c", "chmod go-w /usr/share/filebeat/filebeat.yml && filebeat -e"]
 
 volumes:
-  prometheus-data: {}
-  grafana-data: {}
-  elasticsearch-data: {}
+  prometheus_data: { }
+  grafana-data: { }
+  elasticsearch-data: { }
 
 networks:
   monitoring:

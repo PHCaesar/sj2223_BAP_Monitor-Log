@@ -1,0 +1,22 @@
+#filebeat.inputs:
+#  - type: docker
+#    containers.ids: '*'
+#    processors:
+#      - add_docker_metadata: ~
+filebeat.registry.file_permissions: 0600
+
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+
+processors:
+  - add_cloud_metadata: ~
+
+output.elasticsearch:
+  hosts: '${ELASTICSEARCH_HOSTS:elasticsearch:9200}'

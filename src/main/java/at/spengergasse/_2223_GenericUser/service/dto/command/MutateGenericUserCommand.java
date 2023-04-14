@@ -10,14 +10,14 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor @NoArgsConstructor
 @Builder
-public class MutateUserCommand {
+public class MutateGenericUserCommand {
 
     private String name;
-    private String MutateFirstname;
-    private String MutateLastname;
+    private String mutateFirstname;
+    private String mutateLastname;
     private String mutatePassword;
     private LocalDateTime registerDate;
-    private LocalDateTime MutateBirthDate;
-    private Integer Version;
+    private LocalDateTime mutateBirthDate;
+    private Integer version;
 
 }

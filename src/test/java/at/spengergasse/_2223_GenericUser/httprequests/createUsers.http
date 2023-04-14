@@ -1,0 +1,12 @@
+POST http://localhost:8080/api/user/
+Content-Type: application/json
+Accept: application/json
+{
+  "name": "PHCaesar",
+  "mutateFirstname" : "Philipp",
+  "mutateLastname" : "Cserich",
+  "mutatePassword" : "password",
+  "registerDate" : null,
+  "mutateBirthDate" : null,
+  "version" : 1
+}

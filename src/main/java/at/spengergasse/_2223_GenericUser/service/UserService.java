@@ -3,8 +3,8 @@ package at.spengergasse._2223_GenericUser.service;
 import at.spengergasse._2223_GenericUser.domain.GenericUser;
 import at.spengergasse._2223_GenericUser.persistence.UserRepository;
 import at.spengergasse._2223_GenericUser.service.dto.GenericUserDto;
-import at.spengergasse._2223_GenericUser.service.dto.command.MutateUserCommand;
-import lombok.AllArgsConstructor;
+import at.spengergasse._2223_GenericUser.service.dto.command.MutateGenericUserCommand;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,12 +13,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 @Slf4j
 @Transactional
 public class UserService {
-    public final UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public List<GenericUserDto> getUsers(){
         return userRepository.findAll().stream().map(GenericUserDto::new).toList();
@@ -29,7 +29,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = false)
-    public GenericUserDto partiallyUpdateUser(String username, MutateUserCommand newUserInformation){
+    public GenericUserDto partiallyUpdateUser(String username, MutateGenericUserCommand newUserInformation){
         log.debug("updated GenericUser with the username: {}",username);
         Objects.requireNonNull(username);
         Objects.requireNonNull(newUserInformation);
@@ -69,7 +69,7 @@ public class UserService {
     }
 
     @Transactional
-    public GenericUser createUser(MutateUserCommand userCommand){
+    public GenericUser createUser(MutateGenericUserCommand userCommand){
         log.debug("Try to create a new User with the following params: {}",userCommand);
 
         Objects.requireNonNull(userCommand);

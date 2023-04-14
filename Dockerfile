@@ -4,7 +4,7 @@ ARG JAR_FILE=/target/*.jar
 COPY ${JAR_FILE} application.jar
 RUN java -Djarmode=layertools -jar application.jar extract
 
-FROM openjdk:20
+FROM openjdk:20 as my-app
 LABEL maintainer="Cserich Philipp"
 COPY --from=builder dependencies/ ./
 # COPY --from=builder internal-dependencies/ ./
